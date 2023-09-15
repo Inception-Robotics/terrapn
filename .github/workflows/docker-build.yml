@@ -42,7 +42,7 @@ jobs:
     - name: Build, tag, and push image to Amazon ECR
       run: |
         ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY=ecr-abhishek-inceptionrobotics-ai
+        ECR_REPOSITORY=ecr-inception-robotics-terrapn
         IMAGE_TAG=${{ github.sha }}
         
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --build-arg conda_file=terrapn-a -f terrapnDockerfile .
