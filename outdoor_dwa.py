@@ -20,11 +20,12 @@ import rospy
 import math
 import numpy as np
 import sys
+import json
 sys.path.remove('/opt/ros/melodic/lib/python2.7/dist-packages')
 import cv2
 sys.path.append('/opt/ros/melodic/lib/python2.7/dist-packages')
-from std_msgs.msg import Float32, Bool
-from geometry_msgs.msg import Twist, PointStamped
+from std_msgs.msg import Float32, Bool, String
+from geometry_msgs.msg import Twist, PointStamped, Pose
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import LaserScan, Image
 from cv_bridge import CvBridge, CvBridgeError
@@ -53,7 +54,8 @@ class Config():
         #NOTE good params:
         #NOTE 0.55,0.1,1.0,1.6,3.2,0.15,0.05,0.1,1.7,2.4,0.1,3.2,0.18
         # self.bridge = CvBridge()
-        self.robot_name = rospy.get_param('/outdoor_dwa/robot_name', "jackal")
+        self.robot_name = rospy.get_param('robot_name', "jackal")
+
         if self.robot_name == "husky":
             self.max_speed = 0.5#0.6  # [m/s]
             self.min_speed = 0.0  # [m/s]
@@ -89,16 +91,17 @@ class Config():
         self.robot_radius = 0.5  # [m]
         self.surface_cost_gain = 50 # lower = cost difference between the surfaces will be low
         
+        # initial robot state
         self.x = 0.0
         self.y = 0.0
         self.z = 0.0
-        self.goalX = 0
-        self.goalY = 0
         self.th = 0.0
-        self.r = rospy.Rate(20)
 
-        # self.goalX = 2.0
-        # self.goalY = 0
+        # initial goal state
+        self.goalX = 0.0
+        self.goalY = 0.0
+        
+        self.r = rospy.Rate(20)
 
         # List lengths related to inputs and labels 
         self.patch_side = 100
@@ -133,12 +136,47 @@ class Config():
         print("Finished Loading Model!")
 
         # Topic names
-        self.odom_topic_name = "/odometry/filtered"
-        self.image_topic_name="/camera/color/image_raw"
+        self.odom_topic_name = rospy.get_param("odom_topic_name","/odometry/filtered")
+        self.image_topic_name= rospy.get_param("cam_topic_name","/camera/color/image_raw")
+        self.lidar_topic_name = rospy.get_param("lidar_topic_name","/scan")
+        self.cmd_topic_name = rospy.get_param("cmd_topic_name","/cmd_vel")
+        self.goal_topic_name = rospy.get_param("goal_topic_name","/goal")
+
         # self.image_topic_name = "/zed2i/zed_node/left_raw/image_raw_color"
 
         self.camera_tilt_angle = -30
 
+        # used for resetting the algorithm
+        self.new_case = True
+
+    def reset_attributes(self):
+        self.x = 0.0
+        self.y = 0.0
+        self.z = 0.0
+        self.th = 0.0
+
+        self.goalX = 0.0 # the robot stops moving once x,y aligns with goal
+        self.goalY = 0.0
+
+        self.iter = 0
+
+        self.cropped_rows=0
+        self.cropped_cols=0
+
+        # Image object
+        self.resized_img = np.zeros((self.num_v*100, self.num_h*100, 3), np.uint8)
+        self.cropped_img = np.zeros((330, 640, 3), np.uint8) #np.zeros((300, 672, 3), np.uint8)
+        self.input_imgs = np.asarray([])
+
+        # Input velocity vector
+        self.vels = []
+        self.input_vel = np.asarray([])
+        self.vel_array_reshaped = np.asarray([])
+
+        self.cropped_list = []
+        self.divided_patch_list = []
+
+        self.new_case = True
 
     # Callback for Odometry
     def assignOdomCoords(self, msg):
@@ -188,10 +226,6 @@ class Config():
         # resize image
         self.resized_img = cv2.resize(self.cropped_img, dim, interpolation = cv2.INTER_AREA)
 
-
-
-
-
     # Callback for goal from POZYX
     def target_callback(self, data):
 
@@ -208,6 +242,17 @@ class Config():
         print("Self odom:",self.x,self.y)
         print("Goals = ", self.goalX, self.goalY)
 
+    def goal_callback(self, msg : Pose):
+        """new callback function for goal location
+        instead of taking polar coordinates and converting it in reference to
+        odom frame, simply store the newly published x,y (already in odom frame)
+        Args:
+            msg (Pose): _description_
+        """
+        self.goalX = msg.position.x
+        self.goalY = msg.position.y
+        print("Self odom:",self.x,self.y)
+        print("Goals = ", self.goalX, self.goalY)
 
     def weak_segmentation(self, cropped_image):
         #performs weak classification on the resized cropped image
@@ -821,18 +866,25 @@ def main():
 
     # subOdom = rospy.Subscriber("/integrated_to_init", Odometry, config.assignOdomCoords)
     subOdom = rospy.Subscriber(config.odom_topic_name, Odometry, config.assignOdomCoords)
-    subLaser = rospy.Subscriber("/scan", LaserScan, obs.assignObs, config)
+    subLaser = rospy.Subscriber(config.lidar_topic_name, LaserScan, obs.assignObs, config)
     subGoal = rospy.Subscriber('/target/position', Twist, config.target_callback)
     subImage = rospy.Subscriber(config.image_topic_name, Image, config.img_callback)
+
+    # create a subscriber to "/reset" topic
+    subReset = rospy.Subscriber("/reset", Bool, config.reset_attributes)
+
+    # create a subscriber to goal published in reference to the odom frame
+    subGoal_odom = rospy.Subscriber(config.goal_topic_name, config.goal_callback)
+
     goal_state_pub = rospy.Publisher('/goal_state_pub', Bool, queue_size=10)
     cost_map_publisher = rospy.Publisher('/terrapn_costmap', Image, queue_size=10)
     publish_cost_map = True
     bridge = CvBridge()
 
-    pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
+    pub = rospy.Publisher(config.cmd_topic_name, Twist, queue_size=1)
     # pub = rospy.Publisher('/husky/cmd_vel_DWA', Twist, queue_size=1)
     speed = Twist()
-    
+
     # initial state [x(m), y(m), theta(rad), v(m/s), omega(rad/s)]
     x = np.array([config.x, config.y, config.th, 0.0, 0.0])
     # initial linear and angular velocities
@@ -842,9 +894,17 @@ def main():
     reached_goal = 0
     algorithm_type = rospy.get_param('/outdoor_dwa/algorithm', "accurate")
 
-
     # runs until terminated externally
     while not rospy.is_shutdown():
+        # config.new_case is set to True after the config.reset_attributes is executed
+        if config.new_case is True:
+            # reset x and u
+            # initial state [x(m), y(m), theta(rad), v(m/s), omega(rad/s)]
+            x = np.array([config.x, config.y, config.th, 0.0, 0.0])
+            # initial linear and angular velocities
+            u = np.array([0.0, 0.0])
+
+            config.new_case = False
 
         if (atGoal(config,x,goal_state_pub) == False): # Not reached the goal
             t1 = time.time()
@@ -978,9 +1038,6 @@ def main():
 
         # print("Goals = ", config.goalX, config.goalY)
         # print("Current Position = ", x[0], x[1])
-
-        
-
 
 
 if __name__ == '__main__':

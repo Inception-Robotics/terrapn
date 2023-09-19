@@ -2,10 +2,23 @@
     <!-- Required arguments-->
     <arg name="robot_name" default="jackal"/>
     <arg name="algorithm" default="accurate"/>
+    <arg name="cam_topic_name" default="/rgb"/>
+    <arg name="odom_topic_name" default="/odom" />
+    <arg name="lidar_topic_name" default="/scan" />
+    <arg name="cmd_topic_name" default="/cmd_vel" />
+    <arg name="goal_topic_name" default="/goal" />
+
+    <!-- make the parameters global (not under namespace /outdoor_dwa) -->
+    <rosparam param="robot_name" subst_value="True">$(arg robot_name)</rosparam>
+    <rosparam param="cam_topic_name" subst_value="True">$(arg cam_topic_name)</rosparam>
+    <rosparam param="odom_topic_name" subst_value="True">$(arg odom_topic_name)</rosparam>
+    <rosparam param="lidar_topic_name" subst_value="True">$(arg lidar_topic_name)</rosparam>
+    <rosparam param="cmd_topic_name" subst_value="True">$(arg cmd_topic_name)</rosparam>
+    <rosparam param="goal_topic_name" subst_value="True">$(arg goal_topic_name)</rosparam>
 
     <!-- Terrapn Node -->
     <node name="outdoor_dwa" type="outdoor_dwa.py" pkg="terrapn" output="screen">
-        <param name="robot_name" value="$(arg robot_name)" />
+        <!-- keep "algorithm" a private param -->
         <param name="algorithm" value="$(arg algorithm)" />
     </node>
 </launch>

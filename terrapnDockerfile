@@ -31,22 +31,22 @@ RUN bash Miniconda3* -b
 
 # Building terrapn packages
 RUN mkdir -p /opt/terrapn_ws/src
-WORKDIR /opt/terrapn_ws/src
 
+# clone terrapn
+WORKDIR /opt/terrapn_ws/src
 RUN git clone https://github.com/Inception-Robotics/terrapn.git
 
-WORKDIR /opt/terrapn_ws/
-RUN rosdep install --from-paths src --ignore-src -r -y
-RUN .  /opt/ros/melodic/setup.sh && catkin_make 
-
+# create conda env
 WORKDIR /opt/terrapn_ws/src/terrapn/conda
 ARG conda_file=terrapn
 RUN conda env create -f $conda_file.yml
 
+# build workspace
+WORKDIR /opt/terrapn_ws/
+RUN rosdep install --from-paths src --ignore-src -r -y
+RUN .  /opt/ros/melodic/setup.sh && catkin_make 
+RUN echo "source /opt/terrapn_ws/devel/setup.bash" >> ~/.bashrc
+
+# init env
 RUN conda init
 ENV PYTHONPATH="/opt/terrapn_ws/src/terrapn/model/"
-
-
-
-
-
