@@ -1,0 +1,24 @@
+{   
+    "algorithm": "terrapn",
+    "timeout": 30,
+    "robot": "jackel",
+    "cam_topic_name": "/rgb",
+    "lidar_topic_name": "/scan",
+    "odom_topic_name": "/odom",
+    "cmd_topic_name": "/cmd_vel",
+    "goal_topic_name": "/goal",
+    "test cases": [
+        {
+        "environment" : "TC1a",
+        "init pose": {"x":-4.5,"y":0.0,"yaw":0.0},
+        "goal pose": {"x":4.5,"y":0.0,"yaw":0.0},
+        "timeout": 15
+        },
+        {
+        "environment" : "TC1b",
+        "init pose": {"x":-4.5,"y":0.0,"yaw":0.0},
+        "goal pose": {"x":4.5,"y":0.0,"yaw":0.0},
+        "timeout": 15
+        }
+    ]
+}
