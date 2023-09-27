@@ -874,7 +874,7 @@ def main():
     subReset = rospy.Subscriber("/reset", Bool, config.reset_attributes)
 
     # create a subscriber to goal published in reference to the odom frame
-    subGoal_odom = rospy.Subscriber(config.goal_topic_name, config.goal_callback)
+    subGoal_odom = rospy.Subscriber(config.goal_topic_name,Pose, config.goal_callback)
 
     goal_state_pub = rospy.Publisher('/goal_state_pub', Bool, queue_size=10)
     cost_map_publisher = rospy.Publisher('/terrapn_costmap', Image, queue_size=10)
