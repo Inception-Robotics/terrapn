@@ -21,6 +21,8 @@ import math
 import numpy as np
 import sys
 import json
+import tensorflow as tf
+from keras.backend import set_session
 sys.path.remove('/opt/ros/melodic/lib/python2.7/dist-packages')
 import cv2
 sys.path.append('/opt/ros/melodic/lib/python2.7/dist-packages')
@@ -861,6 +863,10 @@ def atGoal(config, x,goal_state_pub):
 def main():
     print(__file__ + " start!!")
     
+    config = tf.compat.v1.ConfigProto()
+    config.gpu_options.per_process_gpu_memory_fraction = 0.25
+    set_session(tf.compat.v1.Session(config=config))
+
     config = Config() # robot specification
     obs = Obstacles() # position of obstacles
 
