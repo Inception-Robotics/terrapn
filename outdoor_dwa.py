@@ -871,7 +871,7 @@ def main():
     subImage = rospy.Subscriber(config.image_topic_name, Image, config.img_callback)
 
     # create a subscriber to "/reset" topic
-    subReset = rospy.Subscriber("/reset", Bool, config.reset_attributes)
+    subReset = rospy.Subscriber("/reset_sim", Bool, config.reset_attributes)
 
     # create a subscriber to goal published in reference to the odom frame
     subGoal_odom = rospy.Subscriber(config.goal_topic_name,Pose, config.goal_callback)
