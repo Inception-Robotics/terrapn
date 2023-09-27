@@ -93,5 +93,5 @@ dependencies:
       - wrapt==1.12.1
       - xgboost==1.7.6
       - zipp==3.16.2
-      - netifaces-0.11.0
+      - netifaces==0.11.0
 prefix: /root/miniconda3/envs/test
