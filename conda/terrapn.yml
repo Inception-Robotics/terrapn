@@ -181,4 +181,5 @@ dependencies:
     - traitlets==5.1.1
     - wcwidth==0.2.5
     - xgboost==1.5.1
+    - netifaces-0.11.0
 prefix: /home/adarshjs/anaconda3/envs/terrapn
