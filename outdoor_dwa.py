@@ -151,6 +151,14 @@ class Config():
         # used for resetting the algorithm
         self.new_case = True
 
+    def reset_callback(self, msg : Bool):
+        """callback for resetting the config instance
+
+        Args:
+            msg (Bool): _description_
+        """
+        self.reset_attributes()
+
     def reset_attributes(self):
         self.x = 0.0
         self.y = 0.0
@@ -877,7 +885,7 @@ def main():
     subImage = rospy.Subscriber(config.image_topic_name, Image, config.img_callback)
 
     # create a subscriber to "/reset" topic
-    subReset = rospy.Subscriber("/reset_sim", Bool, config.reset_attributes)
+    subReset = rospy.Subscriber("/reset_sim", Bool, config.reset_callback)
 
     # create a subscriber to goal published in reference to the odom frame
     subGoal_odom = rospy.Subscriber(config.goal_topic_name,Pose, config.goal_callback)
