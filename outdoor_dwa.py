@@ -879,7 +879,7 @@ def atGoal(config, x,goal_state_pub):
 
 def main():
     print(__file__ + " start!!")
-    
+
     # query gpu memory
     gpu_memory_gb = get_gpu_memory()[0]/1024
 
@@ -892,8 +892,9 @@ def main():
         use_fraction = 0.75
 
     rospy.loginfo(f"GPU memory (GB): {gpu_memory_gb}, ues fraction: {use_fraction:.2f}")
+
     config = tf.compat.v1.ConfigProto()
-    config.gpu_options.per_process_gpu_memory_fraction = 0.25
+    config.gpu_options.per_process_gpu_memory_fraction = use_fraction
     set_session(tf.compat.v1.Session(config=config))
 
     config = Config() # robot specification
