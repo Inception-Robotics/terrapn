@@ -15,6 +15,15 @@ from __future__ import print_function
 # This code integrates our self-supervised learning output costmap with DWA by computing the surface cost for each v, w in the Dynamic Window
 # TODO: Varying the acceleration
 
+import subprocess as sp
+import os
+
+def get_gpu_memory():
+    command = "nvidia-smi --query-gpu=memory.free --format=csv"
+    memory_free_info = sp.check_output(command.split()).decode('ascii').split('\n')[:-1][1:]
+    memory_free_values = [int(x.split()[0]) for i, x in enumerate(memory_free_info)]
+    return memory_free_values
+
 import roslib
 import rospy
 import math
@@ -871,6 +880,18 @@ def atGoal(config, x,goal_state_pub):
 def main():
     print(__file__ + " start!!")
     
+    # query gpu memory
+    gpu_memory_gb = get_gpu_memory()[0]/1024
+
+    # restrict gpu usage based on the gpu memory size
+    if gpu_memory_gb >= 20.0:
+        use_fraction = 0.25
+    elif gpu_memory_gb >= 8.0:
+        use_fraction = 0.5
+    else:
+        use_fraction = 0.75
+
+    rospy.loginfo(f"GPU memory (GB): {gpu_memory_gb}, ues fraction: {use_fraction:.2f}")
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.per_process_gpu_memory_fraction = 0.25
     set_session(tf.compat.v1.Session(config=config))
