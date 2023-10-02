@@ -47,7 +47,7 @@ class Dataset_Subscriber:
 		# self.odom_sub = rospy.Subscriber(self.odom_topic_name', Odometry, self.odometry_callback)
 
 		# List lengths related to inputs and labels 
-		self.patch_side = 200
+		self.patch_side = 100
 		self.vel_vector_len = 150
 		self.diff_duration = 12
 		self.iter = 0
@@ -103,6 +103,8 @@ class Dataset_Subscriber:
 		# Obtain patch
 		(rows,cols,channels) = cv_image.shape
 		cropped_image = cv_image[rows-self.patch_side:rows, cols//2 - self.patch_side//2:cols//2 + self.patch_side//2]
+		print("the shape of the cropped images, ",)
+		print(cropped_image.shape)
 
 		# Obtain Odom and IMU data for this instant and append on to a vector
 		odom_data = rospy.wait_for_message(self.odom_topic_name, Odometry, timeout=None)
@@ -137,7 +139,8 @@ class Dataset_Subscriber:
 				# print("Label Vector = ", self.label)
 
 				# Save dataset
-				cv2.imwrite(self.dataset_path + "/" + str(self.iter) + ".png", cv_image)
+				# cv2.imwrite(self.dataset_path + "/" + str(self.iter) + ".png", cv_image)
+				cv2.imwrite(self.dataset_path + "/" + str(self.iter) + ".png", cropped_image)
 				np.save(self.dataset_path + "/" + "input_velocity_" + str(self.iter) + ".npy", self.vels)
 				np.save(self.dataset_path + "/" +"label_" + str(self.iter) + ".npy", self.label)
 
