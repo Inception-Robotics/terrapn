@@ -11,6 +11,7 @@ from keras.callbacks import ModelCheckpoint, CSVLogger
 from keras.models import load_model
 from os.path import expanduser
 import argparse
+from datetime import datetime
 
 
 fd_name = "weights_bn6"
@@ -72,6 +73,9 @@ def main():
     vel_test = vel_data[rand[:split_point]]
     labels_test = labels[rand[:split_point]]
 
+    current_time = datetime.now()
+    time_stamp_str = current_time.strftime("%Y_%m_%d_%H_%M")
+
 
     if training_type == "train":
         print("---------------------Training from scratch-----------------------")
@@ -80,7 +84,7 @@ def main():
     elif training_type == "retrain":
         model = load_model(model_name)
         print("+++++++++++++++++++++ Retraining the existing model +++++++++++++++++++++++")
-    checkpoint_name = trained_model_dir + '/Weights-{epoch:03d}--{val_loss:.5f}.hdf5' 
+    checkpoint_name = trained_model_dir + '/Weights-'+ time_stamp_str +'.hdf5' 
     checkpoint = ModelCheckpoint(checkpoint_name, monitor='val_loss', verbose = 1, save_best_only = True, mode ='auto')
     csv_logger = CSVLogger(trained_model_dir+ '/training.log')
     callbacks_list = [checkpoint, csv_logger]
