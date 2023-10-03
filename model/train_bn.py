@@ -86,7 +86,7 @@ def main():
         print("+++++++++++++++++++++ Retraining the existing model +++++++++++++++++++++++")
     checkpoint_name = trained_model_dir + '/Weights-'+ time_stamp_str +'.hdf5' 
     checkpoint = ModelCheckpoint(checkpoint_name, monitor='val_loss', verbose = 1, save_best_only = True, mode ='auto')
-    csv_logger = CSVLogger(trained_model_dir+ '/training.log')
+    csv_logger = CSVLogger(trained_model_dir+ '/training'+ time_stamp_str +'.log')
     callbacks_list = [checkpoint, csv_logger]
     model.fit([img_train, vel_train], labels_train, epochs=50, batch_size=32, validation_split = 0.2, callbacks=callbacks_list)
 
