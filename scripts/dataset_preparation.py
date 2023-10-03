@@ -22,10 +22,11 @@ from cv_bridge import CvBridge, CvBridgeError
 import os
 
 class Dataset_Subscriber:
-	def __init__(self, bag_file_path, show_images):
+	def __init__(self, bag_file_path, show_images, save_type):
 		self.bridge = CvBridge()
 		self.show_images = show_images
 		self.bag_file_path = bag_file_path
+		self.save_type = save_type
 		self.dataset_path = os.path.expanduser("~/inception/labeled_dataset")
 		if not os.path.exists(self.dataset_path):
 			os.makedirs(self.dataset_path)
@@ -139,8 +140,10 @@ class Dataset_Subscriber:
 				# print("Label Vector = ", self.label)
 
 				# Save dataset
-				# cv2.imwrite(self.dataset_path + "/" + str(self.iter) + ".png", cv_image)
-				cv2.imwrite(self.dataset_path + "/" + str(self.iter) + ".png", cropped_image)
+				if self.save_type == "fullsize":
+					cv2.imwrite(self.dataset_path + "/" + str(self.iter) + ".png", cv_image)
+				elif self.save_type == "crops":
+					cv2.imwrite(self.dataset_path + "/" + str(self.iter) + ".png", cropped_image)
 				np.save(self.dataset_path + "/" + "input_velocity_" + str(self.iter) + ".npy", self.vels)
 				np.save(self.dataset_path + "/" +"label_" + str(self.iter) + ".npy", self.label)
 
@@ -222,9 +225,10 @@ def main():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('bag_file_path', type=str, help='bag file path')
 	parser.add_argument('--show', action='store_true', help='Show images')
+	parser.add_argument('--save_type', type=str, help='Do you want to save ["fullsize] fullsize images or ["crops"]crops?', default="crops")
 
 	args = parser.parse_args()
-	ic = Dataset_Subscriber(args.bag_file_path, args.show)
+	ic = Dataset_Subscriber(args.bag_file_path, args.show, args.save_type)
 	rospy.init_node('dataset_subscriber', anonymous=True)
 	try:
 		rospy.spin()
