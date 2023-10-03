@@ -9,6 +9,8 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from keras.callbacks import ModelCheckpoint, CSVLogger
 from keras.models import load_model
+from os.path import expanduser
+import argparse
 
 
 fd_name = "weights_bn6"
@@ -27,8 +29,8 @@ def get_data(data_dir, v_len=50):
                 i = np.asarray(i)
                 img_data.append(i)
                 print(name.split(".")[0])
-                vel_file = data_dir + "/" + "input_velocity_" + str(name.split(".")[0]) + ".npy"
-                label_file = data_dir + "/" + "label_" + str(name.split(".")[0]) + ".npy"
+                vel_file = data_dir + "input_velocity_" + str(name.split(".")[0]) + ".npy"
+                label_file = data_dir + "label_" + str(name.split(".")[0]) + ".npy"
                 print(label_file)
                 print(vel_file)
                 v = np.load(vel_file)[-1 * v_len:]
@@ -39,45 +41,52 @@ def get_data(data_dir, v_len=50):
     return np.array(img_data), np.array(vel_data), np.array(labels), image_count
 
 
+def main():
+    parser = argparse.ArgumentParser(description='Training script to train TerraPN')
+    parser.add_argument('--v_len', type=int, help='Length of velocity commands', default=50)
+    parser.add_argument('--patch_len', type=int, help='Size of the image patch', default=100)
+    parser.add_argument('--training_type', type=str, help='[train]Do you want to train from scratch or [retrain]retrain the existing model?', default="retrain")
+    parser.add_argument('--data_split', type=float, help='Train and test data split in fraction', default=0.1)
+    args=parser.parse_args()
+    v_len = args.v_len
+    patch_len = args.patch_len
+    seed = 0
+    dataset_dir = expanduser("~") + "/inception/labeled_dataset/"
+    if not os.path.exists(expanduser("~") + "/inception/" + "trained_model"):
+        os.makedirs(expanduser("~") + "/inception/" + "trained_model")
+    trained_model_dir = expanduser("~") + "/inception/" + "trained_model/"
+    img_data, vel_data, labels, image_count = get_data(dataset_dir, v_len)
+    training_type = args.training_type
+    model_name = "Weights-047--0.40830.hdf5"
+    test_data_split = args.data_split # In fraction
 
-v_len = 50
-patch_len = 100
-seed = 0
-# img_data, vel_data, labels = get_data("/home/rayguan/Desktop/self_sup/dataset/patch100_lst.txt", v_len)
-img_data, vel_data, labels, image_count = get_data("/home/gamma-nuc/inception/labeled_dataset", v_len)
-train = True
-model_lst = "/home/gamma-robot/Downloads/self_sup/Code_Results/weights/Weights-190--0.21869.hdf5"
-test_data_split = 0.1 # In fraction
+    np.random.seed(seed)  
+    rand = np.arange(image_count)
+    np.random.shuffle(rand)
+    split_point = int(image_count * test_data_split)
 
-np.random.seed(seed)  
-rand = np.arange(image_count)
-np.random.shuffle(rand)
-
-img_train = img_data[rand[int(image_count * test_data_split):]]
-vel_train = vel_data[rand[int(image_count * test_data_split):]]
-labels_train = labels[rand[int(image_count * test_data_split):]]
-img_test = img_data[rand[:int(image_count * test_data_split)]]
-vel_test = vel_data[rand[:int(image_count * test_data_split)]]
-labels_test = labels[rand[:int(image_count * test_data_split)]]
-
-# model = get_model(v_len, patch_len)
-#checkpoint_name = './weights/Weights-{epoch:03d}--{val_loss:.5f}.hdf5' 
-#checkpoint = ModelCheckpoint(checkpoint_name, monitor='val_loss', verbose = 1, save_best_only = True, mode ='auto')
-# callbacks_list = [checkpoint]
+    img_train = img_data[rand[split_point:]]
+    vel_train = vel_data[rand[split_point:]]
+    labels_train = labels[rand[split_point:]]
+    img_test = img_data[rand[:split_point]]
+    vel_test = vel_data[rand[:split_point]]
+    labels_test = labels[rand[:split_point]]
 
 
-# model.fit([img_train, vel_train], labels_train, epochs=200, batch_size=32, validation_split = 0.2, callbacks=callbacks_list)
-
-if train:
-    model = get_model(v_len, patch_len)
-    checkpoint_name = '/home/gamma-nuc/inception/labeled_dataset' + '/Weights-{epoch:03d}--{val_loss:.5f}.hdf5' 
+    if training_type == "train":
+        print("---------------------Training from scratch-----------------------")
+        model = get_model(v_len, patch_len)
+        
+    elif training_type == "retrain":
+        model = load_model(model_name)
+        print("+++++++++++++++++++++ Retraining the existing model +++++++++++++++++++++++")
+    checkpoint_name = trained_model_dir + '/Weights-{epoch:03d}--{val_loss:.5f}.hdf5' 
     checkpoint = ModelCheckpoint(checkpoint_name, monitor='val_loss', verbose = 1, save_best_only = True, mode ='auto')
-    csv_logger = CSVLogger('/home/gamma-nuc/inception/labeled_dataset' + '/training.log')
+    csv_logger = CSVLogger(trained_model_dir+ '/training.log')
     callbacks_list = [checkpoint, csv_logger]
     model.fit([img_train, vel_train], labels_train, epochs=50, batch_size=32, validation_split = 0.2, callbacks=callbacks_list)
-else:
-    model = load_model(model_lst)
 
-out = model.predict([img_test, vel_test])
-np.save("./predict.npy", out)
-np.save("./gt.npy", labels_test)
+
+
+if __name__ == '__main__':
+	main()
