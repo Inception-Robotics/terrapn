@@ -19,10 +19,13 @@ import subprocess as sp
 import os
 
 def get_gpu_memory():
-    command = "nvidia-smi --query-gpu=memory.free --format=csv"
-    memory_free_info = sp.check_output(command.split()).decode('ascii').split('\n')[:-1][1:]
+    command_free = "nvidia-smi --query-gpu=memory.free --format=csv"
+    command_total = "nvidia-smi --query-gpu=memory.total --format=csv"
+    memory_free_info = sp.check_output(command_free.split()).decode('ascii').split('\n')[:-1][1:]
     memory_free_values = [int(x.split()[0]) for i, x in enumerate(memory_free_info)]
-    return memory_free_values
+    memory_total_info = sp.check_output(command_total.split()).decode('ascii').split('\n')[:-1][1:]
+    memory_total_values = [int(x.split()[0]) for i, x in enumerate(memory_total_info)]
+    return memory_free_values, memory_total_values
 
 import roslib
 import rospy
@@ -882,21 +885,25 @@ def main():
     print(__file__ + " start!!")
 
     # query gpu memory
-    gpu_memory_gb = get_gpu_memory()[0]/1024
+    gpu_memory_free, gpu_memory_total = get_gpu_memory()
+    gpu_memory_free = gpu_memory_free[0] / 1024
+    gpu_memory_total = gpu_memory_total[0] / 1024
 
     # restrict gpu usage based on the gpu memory size
-    if gpu_memory_gb >= 20.0:
+    if gpu_memory_total >= 20.0:
         use_fraction = 0.25
-    elif gpu_memory_gb >= 8.0:
+    elif gpu_memory_total >= 8.0:
         use_fraction = 0.5
     else:
-        use_fraction = 0.75
+        use_fraction = 0.9
 
-    rospy.loginfo(f"GPU memory (GB): {gpu_memory_gb}, ues fraction: {use_fraction:.2f}")
+    if (gpu_memory_total * use_fraction) < gpu_memory_free:
+        config = tf.compat.v1.ConfigProto()
+        config.gpu_options.per_process_gpu_memory_fraction = use_fraction
+        set_session(tf.compat.v1.Session(config=config))
+        rospy.loginfo(f"GPU memory (GB) free: {gpu_memory_free}, GPU memory (GB) total: {gpu_memory_total}, use fraction: {use_fraction:.2f}")
 
-    config = tf.compat.v1.ConfigProto()
-    config.gpu_options.per_process_gpu_memory_fraction = use_fraction
-    set_session(tf.compat.v1.Session(config=config))
+    
 
     config = Config() # robot specification
     obs = Obstacles() # position of obstacles
