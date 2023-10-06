@@ -7,6 +7,7 @@
     <arg name="lidar_topic_name" default="/scan" />
     <arg name="cmd_topic_name" default="/cmd_vel" />
     <arg name="goal_topic_name" default="/goal" />
+    <arg name="model_weights_path" default="$(find terrapn)/model/Weights-047--0.40830.hdf5" />
 
     <!-- make the parameters global (not under namespace /outdoor_dwa) -->
     <rosparam param="robot_name" subst_value="True">$(arg robot_name)</rosparam>
@@ -15,7 +16,8 @@
     <rosparam param="lidar_topic_name" subst_value="True">$(arg lidar_topic_name)</rosparam>
     <rosparam param="cmd_topic_name" subst_value="True">$(arg cmd_topic_name)</rosparam>
     <rosparam param="goal_topic_name" subst_value="True">$(arg goal_topic_name)</rosparam>
-
+    <rosparam param="model_weights_path" subst_value="True">$(arg model_weights_path)</rosparam>
+    
     <!-- Terrapn Node -->
     <node name="outdoor_dwa" type="outdoor_dwa.py" pkg="terrapn" output="screen">
         <!-- keep "algorithm" a private param -->

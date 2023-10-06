@@ -143,7 +143,8 @@ class Config():
         # Load trained model
         rospack = rospkg.RosPack()
         self.model_lst = rospack.get_path('terrapn') + "/model/Weights-047--0.40830.hdf5"
-        self.model = load_model(self.model_lst)
+        self.model_weights_path = rospy.get_param('model_weights_path', self.model_lst)
+        self.model = load_model(self.model_weights_path)
         print("Finished Loading Model!")
 
         # Topic names
