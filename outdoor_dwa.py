@@ -127,9 +127,6 @@ class Config():
         self.diff_duration = 12
         self.iter = 0
 
-        self.cropped_rows=0
-        self.cropped_cols=0
-
         # Image object
         self.resized_img = np.zeros((self.num_v*100, self.num_h*100, 3), np.uint8)
         self.cropped_img = np.zeros((330, 640, 3), np.uint8) #np.zeros((300, 672, 3), np.uint8) 
