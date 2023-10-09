@@ -115,6 +115,9 @@ class Config():
         self.goalX = 0.0
         self.goalY = 0.0
         
+        self.cropped_rows=0
+        self.cropped_cols=0
+
         self.r = rospy.Rate(20)
 
         # List lengths related to inputs and labels 
@@ -179,9 +182,6 @@ class Config():
         self.goalY = 0.0
 
         self.iter = 0
-
-        self.cropped_rows=0
-        self.cropped_cols=0
 
         # Image object
         self.resized_img = np.zeros((self.num_v*100, self.num_h*100, 3), np.uint8)
