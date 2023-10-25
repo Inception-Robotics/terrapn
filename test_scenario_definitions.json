@@ -9,16 +9,46 @@
     "goal_topic_name": "/goal",
     "test cases": [
         {
-        "environment" : "TC1a",
+        "environment" : "asphalt_grass_straight",
         "init pose": {"x":-4.5,"y":0.0,"yaw":0.0},
         "goal pose": {"x":4.5,"y":0.0,"yaw":0.0},
         "timeout": 150
         },
         {
-        "environment" : "TC1b",
+        "environment" : "asphalt_grass_curve",
         "init pose": {"x":-4.5,"y":0.0,"yaw":0.0},
         "goal pose": {"x":4.5,"y":0.0,"yaw":0.0},
         "timeout": 150
+        },
+        {
+        "environment" : "low_high_grass_curve",
+        "init pose": {"x":-4.5,"y":0.0,"yaw":0.0},
+        "goal pose": {"x":4.5,"y":0.0,"yaw":0.0},
+        "timeout": 90
+        },
+        {
+        "environment" : "dirt_grass_straight",
+        "init pose": {"x":-4.5,"y":0.0,"yaw":0.0},
+        "goal pose": {"x":4.5,"y":0.0,"yaw":0.0},
+        "timeout": 90
+        },
+        {
+        "environment" : "dirt_grass_curve",
+        "init pose": {"x":-4.5,"y":0.0,"yaw":0.0},
+        "goal pose": {"x":4.5,"y":0.0,"yaw":0.0},
+        "timeout": 90
+        },
+        {
+        "environment" : "concrete_grass_straight",
+        "init pose": {"x":-4.5,"y":0.0,"yaw":0.0},
+        "goal pose": {"x":4.5,"y":0.0,"yaw":0.0},
+        "timeout": 90
+        },
+        {
+        "environment" : "concrete_grass_curve",
+        "init pose": {"x":-4.5,"y":0.0,"yaw":0.0},
+        "goal pose": {"x":4.5,"y":0.0,"yaw":0.0},
+        "timeout": 90
         }
     ]
 }
